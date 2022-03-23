@@ -1,0 +1,1 @@
+web: python manage.py migrate && gunicorn rockmanlogistic.wsgi --log-file -
