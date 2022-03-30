@@ -30,7 +30,8 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["https://rockmanlogisticsgh.com",
+                 "http://localhost:3000"]
 
 AUTH_USER_MODEL = 'api.CustomUser'
 
@@ -88,24 +89,30 @@ WSGI_APPLICATION = 'rockmanlogistic.wsgi.application'
 DATABASES = {}
 
 if DEBUG:
-    DATABASES['default']: {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'rockmanlogistic',
-        'USER': 'test',
-        'PASSWORD': 'test',
-        'HOST': '127.0.0.1',
-        'PORT': '8889',
-        'OPTIONS': {
-            # 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'rockmanlogistic',
+            'USER': 'test',
+            'PASSWORD': 'test',
+            'HOST': '127.0.0.1',
+            'PORT': '8889',
+            'OPTIONS': {
+                # 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+            }
         }
-        # 'ENGINE': 'django.db.backends.sqlite3',
-        # 'NAME': BASE_DIR / 'db.sqlite3',
     }
 else:
-    DATABASES['default'] = dj_database_url.config(
-        conn_max_age=600, ssl_require=True)
-    DATABASES['default'] = dj_database_url.config(
-        default=config('CLEARDB_DATABASE_URL'))
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=config('CLEARDB_DATABASE_URL')
+        )
+    }
+# else:
+#     DATABASES['default'] = dj_database_url.config(
+#         conn_max_age=600, ssl_require=True)
+#     DATABASES['default'] = dj_database_url.config(
+#         default=config('CLEARDB_DATABASE_URL'))
 
 
 # Password validation
@@ -142,7 +149,10 @@ USE_TZ = True
 #     'http://localhost:3030',
 #     # 'http://localhost:3000/',
 # ]
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "https://rockmanlogisticsgh.com",
+    "http://localhost:3000",
+]
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
