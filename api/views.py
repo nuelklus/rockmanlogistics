@@ -90,7 +90,7 @@ class CustomerTranferView(APIView):
         customer = CustomUser.objects.filter(
             username__iexact=transferData["username"]).get()
 
-        # print(customer.id)
+        print(customer.id)
 
         # money transferred by a customer must be added to the customers balance in the customer table
         customerByCustomUserId = Customer.objects.filter(
@@ -104,7 +104,7 @@ class CustomerTranferView(APIView):
         print(customerByCustomUserId.id)
         selectedCustomer.save()
 
-        exit()
+        # exit()
         # new_transfer = Transfer.objects.create(customer_id=Customer.objects.get(id=customer.id),
         new_transfer = Transfer.objects.create(customer_id=Customer.objects.get(id=customerByCustomUserId.id),
                                                amount_sent_dollars=transferData[
