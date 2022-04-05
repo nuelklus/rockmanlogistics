@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import *
+from django.db.models import Sum
 
 
 # Create your views here.
@@ -232,3 +233,14 @@ class SupplierPaymentDetailsView(APIView):
 
         serializer = SupplierPaymentSerializers(SupplierPayment_object)
         return Response(serializer.data)
+
+
+class TranferSupplierPaymentSumView(APIView):
+
+    def get(self, request, date):
+        transferSum = Transfer.objects.filter(date=date).aggregate(amount_sent_dollars = Sum('amount_sent_dollars'))
+        tranferSumsSerializedObj = TransferSumSerializers(transferSum, many=False)
+        supplierPaymentSum = SupplierPayment.objects.filter(payment_id__date=date).aggregate(goods_cost_dollars = Sum('goods_cost_dollars'))
+        supplierPaymentSumSumsSerializedObj = SupplierPaymentSumSerializers(supplierPaymentSum, many=False)
+        result = {**supplierPaymentSumSumsSerializedObj.data, **tranferSumsSerializedObj.data}
+        return Response(result)

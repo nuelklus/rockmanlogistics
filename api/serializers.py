@@ -57,3 +57,13 @@ class SupplierPaymentSerializers(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['id']
         depth = 3
+
+class TransferSumSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Transfer
+        fields = ['amount_sent_dollars']
+
+class SupplierPaymentSumSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = SupplierPayment
+        fields = ['goods_cost_dollars']

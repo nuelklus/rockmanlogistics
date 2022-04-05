@@ -32,7 +32,7 @@ DEBUG = config('DEBUG', cast=bool)
 
 ALLOWED_HOSTS = ["https://rockmanlogisticsgh.com",
                  "http://localhost:3000"]
-
+# ALLOWED_HOSTS = ['*']
 AUTH_USER_MODEL = 'api.CustomUser'
 
 
@@ -86,6 +86,7 @@ WSGI_APPLICATION = 'rockmanlogistic.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
+
 DATABASES = {}
 
 if DEBUG:
