@@ -17,5 +17,5 @@ urlpatterns = [
     path('supplierpaymentdetails/<str:pk>/',
          SupplierPaymentDetailsView.as_view()),
     path('tranfersupplierpaymentsum/<str:date>/', TranferSupplierPaymentSumView.as_view()),
-#     path('tranfersupplierpaymentsum/<str:date>/', TranferSupplierPaymentSumView.as_view()),
+    path('customerswithnegativebalance/', CustomersWithNegativeBalanceView.as_view()),
 ]

@@ -244,3 +244,12 @@ class TranferSupplierPaymentSumView(APIView):
         supplierPaymentSumSumsSerializedObj = SupplierPaymentSumSerializers(supplierPaymentSum, many=False)
         result = {**supplierPaymentSumSumsSerializedObj.data, **tranferSumsSerializedObj.data}
         return Response(result)
+
+
+
+class CustomersWithNegativeBalanceView(APIView):
+
+    def get(self, request):
+        customers = Customer.objects.filter(account_balance__lt=0)
+        serializer = CustomerSerializers(customers, many=True)
+        return Response(serializer.data)
