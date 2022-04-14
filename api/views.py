@@ -28,7 +28,32 @@ class CustomerDetailsViewByUsername(APIView):
     def get(self, request, username):
         # customer = CustomUser.objects.get(username=username)
         customerInfo = Customer.objects.get(user_id__username=username)
-        serializer = CustomerSerializers(customerInfo, many=False)
+        serializer = CustomerUpdateSerializers(customerInfo, many=False)
+        return Response(serializer.data)
+
+    def put(self, request, username):
+        Customer_objupdate = Customer.objects.get(user_id__username=username)
+        data = request.data
+        # print(data)
+        # exit()
+        # print(Customer_objupdate.user_id.id)
+
+        CustomUser_obj = CustomUser.objects.get(username=username)
+        CustomUser_obj.first_name = data["user_id"]["first_name"]
+        CustomUser_obj.last_name = data["user_id"]["last_name"]
+        CustomUser_obj.email = data["user_id"]["email"]
+        CustomUser_obj.phone_no = data["user_id"]["phone_no"]
+        CustomUser_obj.username = data["user_id"]["username"]
+        CustomUser_obj.password = data["user_id"]["password"]
+        CustomUser_obj.save()
+        # print(CustomUser_obj.first_name)
+
+        Customer_objupdate.user_id = CustomUser_obj
+        Customer_objupdate.company_name = data["company_name"]
+
+        Customer_objupdate.save()
+
+        serializer = CustomerUpdateSerializers(Customer_objupdate, many=False)
         return Response(serializer.data)
 
 
@@ -57,18 +82,20 @@ class CustomerDetailsView(APIView):
     def put(self, request, pk):
         Customer_obj = Customer.objects.get(id=pk)
         data = request.data
-        # print(Transfer_object.date)
-
-        print(Customer_obj.user_id.id)
+        print(data)
+        # exit()
+        # print(Customer_obj.user_id.id)
 
         # Customer_obj.user_id = CustomUser.objects.get(id=3)
         # print(Customer_obj.user_id.id)
 
         # exit()
+        Customer_obj.user_id.username = data["username"]
+        Customer_obj.user_id.phone_no = data["phone_no"]
         Customer_obj.company_name = data["company_name"]
         Customer_obj.account_balance = data["account_balance"]
-        Customer_obj.dept = data["dept"]
-
+        # Customer_obj.dept = data["dept"]
+        # print(Customer_obj)
         Customer_obj.save()
 
         serializer = CustomerSerializers(Customer_obj)
@@ -134,7 +161,7 @@ class CustomerTranferDetailsView(APIView):
         # print(Transfer_object.customer_id.id)
 
         # exit()
-        Transfer_object.date = data["date"]
+        # Transfer_object.date = data["date"]
         Transfer_object.amount_sent_dollars = data["amount_sent_dollars"]
         Transfer_object.amount_sent_cedis = data["amount_sent_cedis"]
         Transfer_object.balance = data["balance"]
@@ -238,13 +265,17 @@ class SupplierPaymentDetailsView(APIView):
 class TranferSupplierPaymentSumView(APIView):
 
     def get(self, request, date):
-        transferSum = Transfer.objects.filter(date=date).aggregate(amount_sent_dollars = Sum('amount_sent_dollars'))
-        tranferSumsSerializedObj = TransferSumSerializers(transferSum, many=False)
-        supplierPaymentSum = SupplierPayment.objects.filter(payment_id__date=date).aggregate(goods_cost_dollars = Sum('goods_cost_dollars'))
-        supplierPaymentSumSumsSerializedObj = SupplierPaymentSumSerializers(supplierPaymentSum, many=False)
-        result = {**supplierPaymentSumSumsSerializedObj.data, **tranferSumsSerializedObj.data}
+        transferSum = Transfer.objects.filter(date=date).aggregate(
+            amount_sent_dollars=Sum('amount_sent_dollars'))
+        tranferSumsSerializedObj = TransferSumSerializers(
+            transferSum, many=False)
+        supplierPaymentSum = SupplierPayment.objects.filter(
+            payment_id__date=date).aggregate(goods_cost_dollars=Sum('goods_cost_dollars'))
+        supplierPaymentSumSumsSerializedObj = SupplierPaymentSumSerializers(
+            supplierPaymentSum, many=False)
+        result = {**supplierPaymentSumSumsSerializedObj.data,
+                  **tranferSumsSerializedObj.data}
         return Response(result)
-
 
 
 class CustomersWithNegativeBalanceView(APIView):

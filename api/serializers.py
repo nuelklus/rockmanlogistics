@@ -9,6 +9,12 @@ class CustomUserSerializers(serializers.ModelSerializer):
         # read_only_fields = ['id']
         depth = 1
 
+class CustomerUpdateSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = '__all__'
+        # read_only_fields = ['id']
+        depth = 1
 
 class CustomerSerializers(serializers.ModelSerializer):
     user_id = CustomUserSerializers()
