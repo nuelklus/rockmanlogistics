@@ -105,7 +105,7 @@ class CustomerDetailsView(APIView):
 class CustomerTranferView(APIView):
 
     def get(self, request):
-        tranfers = Transfer.objects.all()
+        tranfers = Transfer.objects.order_by('-id')
         serializer = TransferSerializers(tranfers, many=True)
         return Response(serializer.data)
 
@@ -277,6 +277,15 @@ class TranferSupplierPaymentSumView(APIView):
                   **tranferSumsSerializedObj.data}
         return Response(result)
 
+class CustomerTranferByDateView(APIView):
+
+    def get(self, request, date):
+        transfers = Transfer.objects.filter(date=date)
+        # print(transfers)
+        # exit()
+        tranferSerializedObj = TransferSerializers(
+            transfers, many=True)
+        return Response(tranferSerializedObj.data)
 
 class CustomersWithNegativeBalanceView(APIView):
 
