@@ -293,3 +293,11 @@ class CustomersWithNegativeBalanceView(APIView):
         customers = Customer.objects.filter(account_balance__lt=0)
         serializer = CustomerSerializers(customers, many=True)
         return Response(serializer.data)
+
+class CustomersWithPositiveBalanceView(APIView):
+
+    def get(self, request):
+        customers = Customer.objects.filter(account_balance__gt=0).order_by('-id')
+        serializer = CustomerSerializers(customers, many=True)
+        return Response(serializer.data)
+
