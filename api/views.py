@@ -277,6 +277,7 @@ class TranferSupplierPaymentSumView(APIView):
                   **tranferSumsSerializedObj.data}
         return Response(result)
 
+
 class CustomerTranferByDateView(APIView):
 
     def get(self, request, date):
@@ -287,6 +288,7 @@ class CustomerTranferByDateView(APIView):
             transfers, many=True)
         return Response(tranferSerializedObj.data)
 
+
 class CustomersWithNegativeBalanceView(APIView):
 
     def get(self, request):
@@ -294,10 +296,40 @@ class CustomersWithNegativeBalanceView(APIView):
         serializer = CustomerSerializers(customers, many=True)
         return Response(serializer.data)
 
+
 class CustomersWithPositiveBalanceView(APIView):
 
     def get(self, request):
-        customers = Customer.objects.filter(account_balance__gt=0).order_by('-id')
+        customers = Customer.objects.filter(
+            account_balance__gt=0).order_by('-id')
         serializer = CustomerSerializers(customers, many=True)
         return Response(serializer.data)
 
+
+class CustomerTransfersView(APIView):
+
+    def get(self, request, username):
+        customUser = CustomUser.objects.filter(
+            username__iexact=username).get()
+        print(customUser.id)
+        customerID = Customer.objects.get(user_id_id=customUser.id)
+        # print(customerID)
+
+        customerTransfers = Transfer.objects.filter(
+            customer_id__id=customerID.id)
+        serializer = TransferSerializers(customerTransfers, many=True)
+        return Response(serializer.data)
+
+
+class CustomerSupplyPaymentView(APIView):
+
+    def get(self, request, username):
+        customUser = CustomUser.objects.filter(
+            username__iexact=username).get()
+        customerID = Customer.objects.get(user_id_id=customUser.id)
+
+        customerSupplierPayment = SupplierPayment.objects.filter(
+            customer_id__id=customerID.id)
+        serializer = SupplierPaymentSerializers(
+            customerSupplierPayment, many=True)
+        return Response(serializer.data)

@@ -24,4 +24,8 @@ urlpatterns = [
          CustomersWithNegativeBalanceView.as_view()),
     path('customerswithpositivebalance/',
          CustomersWithPositiveBalanceView.as_view()),
+    path('customerTransfersView/<str:username>/',
+         CustomerTransfersView.as_view()),
+    path('customerSupplyPaymentView/<str:username>/',
+         CustomerSupplyPaymentView.as_view()),
 ]
