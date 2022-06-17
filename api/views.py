@@ -180,6 +180,13 @@ class SupplierView(APIView):
         serializer = SupplierSerializers(suppliers, many=True)
         return Response(serializer.data)
 
+    def post(self, request):
+        serializer = SupplierSerializers(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class SupplierPaymentView(APIView):
 
@@ -219,10 +226,25 @@ class SupplierPaymentView(APIView):
         # new_payment.save()
 
         # get cutomer id with the supplier name from the frontend form
-        supplier = Supplier.objects.get(
-            company_name__iexact=postdata["supplier"])
+        # supplierID = 0
+        try:
+            supplier = Supplier.objects.get(
+                company_name__iexact=postdata["supplier"])
+        except Exception:
+            print('text')
+            new_supplier = Supplier.objects.create(
+                company_name=postdata["supplier"],
+                contact_name='Rockman Logistics',
+                address='Ghana-Accra',
+                phone_no='0244400000'
+            )
+            new_supplier.save()
+            supplier = Supplier.objects.get(
+                company_name__iexact=postdata["supplier"])
+            print(supplier.id)
 
-        print(supplier.id)
+        # print(supplier.id)
+
         # exit()
         new_supplierpayments = SupplierPayment.objects.create(
             # made transaction id = 1 because its not necessary to show in supplier payment transactions cause tracking number transfer for one payment is alot of work
