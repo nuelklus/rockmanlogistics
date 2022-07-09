@@ -73,3 +73,11 @@ class SupplierPaymentSumSerializers(serializers.ModelSerializer):
     class Meta:
         model = SupplierPayment
         fields = ['goods_cost_dollars']
+
+
+class FreightSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Freight
+        fields = '__all__'
+        read_only_fields = ['id']
+        depth = 2

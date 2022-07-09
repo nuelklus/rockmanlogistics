@@ -65,5 +65,5 @@ class Freight(models.Model):
     date = models.DateField(auto_now_add=True, auto_now=False)
     total_weight = models.FloatField()
     amount_sent_cedis = models.FloatField()
-    amount_sent_cedis = models.FloatField()
+    # amount_sent_cedis = models.FloatField()
     goods_desc = models.CharField(max_length=255)

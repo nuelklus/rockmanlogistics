@@ -28,4 +28,6 @@ urlpatterns = [
          CustomerTransfersView.as_view()),
     path('customerSupplyPaymentView/<str:username>/',
          CustomerSupplyPaymentView.as_view()),
+    path('customerFreightView/',
+         FreightSerializersView.as_view()),
 ]

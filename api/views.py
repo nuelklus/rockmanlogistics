@@ -355,3 +355,45 @@ class CustomerSupplyPaymentView(APIView):
         serializer = SupplierPaymentSerializers(
             customerSupplierPayment, many=True)
         return Response(serializer.data)
+
+
+class FreightSerializersView(APIView):
+    def get(self, request):
+        Freights = Freight.objects.order_by('-id')
+        serializer = FreightSerializers(Freights, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        postdata = request.data
+        # print(postdata)
+
+        # get cutomer id with the username from the frontend form
+        customer = CustomUser.objects.filter(
+            username__iexact=postdata["username"]).get()
+
+        customerByCustomUserId = Customer.objects.filter(
+            user_id__id=customer.id).get()
+        print(customerByCustomUserId.id)
+        # exit()
+
+        # create payment object
+        new_payment = Payment.objects.create(
+            # date=postdata["date"],
+            status=postdata["payment_id"]["status"], payment_mode=postdata["payment_id"]["payment_mode"],
+            balance=postdata["payment_id"]["balance"], dept=postdata["payment_id"]["dept"],
+            # amount_sent_dollars=postdata["payment_id"]["amount_sent_dollars"],
+            amount_sent_cedis=postdata["payment_id"]["amount_sent_cedis"], transaction_type=postdata["payment_id"]["transaction_type"])
+
+        new_freight = Freight.objects.create(
+            customer_id=Customer.objects.get(id=customerByCustomUserId.id),
+            # date=postdata["date"],
+            payment_id=new_payment,
+            total_weight=postdata["total_weight"],
+            amount_sent_cedis=postdata["amount_sent_cedis"],
+            goods_desc=postdata["goods_desc"])
+
+        # print(new_freight)
+        # exit()
+        new_freight.save()
+        serializer = FreightSerializers(new_freight)
+        return Response(serializer.data)
