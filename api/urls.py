@@ -30,4 +30,6 @@ urlpatterns = [
          CustomerSupplyPaymentView.as_view()),
     path('customerFreightView/',
          FreightSerializersView.as_view()),
+    path('customerfreightdetails/<str:pk>/',
+         FreightDetailsView.as_view()),
 ]

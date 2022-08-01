@@ -12,7 +12,8 @@ class CustomUser(AbstractUser):
 
 
 class Customer(models.Model):
-    user_id = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='user')
+    user_id = models.OneToOneField(
+        CustomUser, on_delete=models.CASCADE, related_name='user')
     company_name = models.CharField(max_length=50)
     account_balance = models.FloatField()
     dept = models.FloatField()
@@ -50,20 +51,34 @@ class Supplier(models.Model):
 
 
 class SupplierPayment(models.Model):
-    customer_id = models.ForeignKey(Customer, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    customer_id = models.ForeignKey(
+        Customer, on_delete=models.CASCADE, default=None, blank=True, null=True)
     Transfer_id = models.ForeignKey(Transfer, on_delete=models.CASCADE)
     payment_id = models.OneToOneField(Payment, on_delete=models.CASCADE)
     goods_cost_dollars = models.FloatField()
     goods_cost_cedis = models.FloatField()
     supplier_id = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     goods_desc = models.CharField(max_length=255)
+    goods_weight = models.FloatField(blank=True, null=True)
+
+
+class Consignment(models.Model):
+    status = models.CharField(max_length=50)
+    city = models.CharField(max_length=50)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now_add=True)
 
 
 class Freight(models.Model):
-    customer_id = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    payment_id = models.OneToOneField(Payment, on_delete=models.CASCADE)
-    date = models.DateField(auto_now_add=True, auto_now=False)
+    customer_id = models.ForeignKey(
+        Customer, on_delete=models.CASCADE, related_name='customer_id')
+    payment_id = models.OneToOneField(
+        Payment, on_delete=models.CASCADE, null=True, blank=True)
+    consignment = models.ForeignKey(
+        Consignment, on_delete=models.CASCADE, null=True, blank=True, related_name='consignment')
+    date = models.DateField(auto_now_add=True)
+    date_updated = models.DateField(auto_now=True)
     total_weight = models.FloatField()
-    amount_sent_cedis = models.FloatField()
-    # amount_sent_cedis = models.FloatField()
+    # amount_sent_dollars = models.FloatField(null=True, blank=True)
     goods_desc = models.CharField(max_length=255)
+    picked_up = models.BooleanField(default=False, null=True, blank=True)

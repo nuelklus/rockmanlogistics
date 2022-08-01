@@ -207,15 +207,11 @@ class SupplierPaymentView(APIView):
         # money paid by a customer must be subtracted from the customers balance in the customer model
         customerByCustomUserId = Customer.objects.filter(
             user_id__id=customer.id).get()
-        selectedCustomer = Customer.objects.get(id=customerByCustomUserId.id)
 
+        selectedCustomer = Customer.objects.get(id=customerByCustomUserId.id)
         selectedCustomer.account_balance -= postdata["amount_paid"]
-        # selectedCustomer.account_balance -= 4
-        # print(type(postdata["amount_paid"]))
-        # exit()
         selectedCustomer.save()
 
-        # exit()
         new_payment = Payment.objects.create(
             # date=postdata["date"],
             status=postdata["payment_id"]["status"], payment_mode=postdata["payment_id"]["payment_mode"],
@@ -241,24 +237,77 @@ class SupplierPaymentView(APIView):
             new_supplier.save()
             supplier = Supplier.objects.get(
                 company_name__iexact=postdata["supplier"])
-            print(supplier.id)
+            # print(supplier.id)
 
-        # print(supplier.id)
+        # get consignment with status open and city Terkey
+        consignment = Consignment.objects.filter(
+            status='open', city='Terkey')
 
-        # exit()
-        new_supplierpayments = SupplierPayment.objects.create(
-            # made transaction id = 1 because its not necessary to show in supplier payment transactions cause tracking number transfer for one payment is alot of work
-            customer_id=Customer.objects.get(id=customerByCustomUserId.id),
-            Transfer_id=Transfer.objects.get(id=1),
-            payment_id=new_payment,
-            goods_cost_dollars=postdata["goods_cost_dollars"],
-            goods_cost_cedis=postdata["goods_cost_cedis"],
-            goods_desc=postdata["goods_desc"], supplier_id=Supplier.objects.get(id=supplier.id))
+        # check if consignment is open for shipment
+        if consignment.exists():
+            # select Freight with consignment status open and city Terkey and the customer already have an entry in that consignment then update customers entry else make a new entry
+            getFreight = Freight.objects.filter(customer_id__id=customerByCustomUserId.id,
+                                                consignment_id__status='open', consignment_id__city='Terkey')
 
-        new_supplierpayments.save()
+            if getFreight.exists():
+                # get editable object to object content with ease
+                getEditableFreightObject = Freight.objects.filter(customer_id__id=customerByCustomUserId.id,
+                                                                  consignment_id__status='open', consignment_id__city='Terkey').get()
+                # update freight total weight
+                getEditableFreightObject.total_weight += float(
+                    postdata["goods_weight"])
 
-        serializer = SupplierPaymentSerializers(new_supplierpayments)
-        return Response(serializer.data)
+                getEditablePaymentObject = Payment.objects.get(
+                    id=getEditableFreightObject.payment_id.id)
+                print(getEditablePaymentObject.amount_sent_cedis)
+                getEditablePaymentObject.amount_sent_cedis = (
+                    getEditableFreightObject.total_weight) * 2
+                # print(getEditableFreightObject.payment_id.amount_sent_cedis)
+                getEditablePaymentObject.save()
+                # exit()
+
+                getEditableFreightObject.save()
+            else:
+                getEditableConsignmentObject = Consignment.objects.filter(
+                    status='open', city='Terkey').get()
+
+                new_paymentForFreight = Payment.objects.create(
+                    # date=postdata["date"],
+                    status=postdata["payment_id"]["status"], payment_mode=postdata["payment_id"]["payment_mode"],
+                    balance=postdata["payment_id"]["balance"], dept=postdata["payment_id"]["dept"],
+                    # amount_sent_dollars=postdata["payment_id"]["amount_sent_dollars"],
+                    amount_sent_cedis=postdata["goods_weight"]*2, transaction_type="freight")
+
+                new_freight = Freight.objects.create(
+                    customer_id=Customer.objects.get(
+                        id=customerByCustomUserId.id),
+                    consignment_id=getEditableConsignmentObject.id,
+                    payment_id=new_paymentForFreight,
+                    total_weight=postdata["goods_weight"],
+                    # amount_sent_dollars=postdata["amount_sent_cedis"],
+                    goods_desc=postdata["goods_desc"])
+
+                print(new_freight)
+                new_freight.save()
+
+            new_supplierpayments = SupplierPayment.objects.create(
+                # made transaction id = 1 because its not necessary to show in supplier payment transactions cause tracking number transfer for one payment is alot of work
+                customer_id=Customer.objects.get(
+                    id=customerByCustomUserId.id),
+                Transfer_id=Transfer.objects.get(id=1),
+                payment_id=new_payment,
+                goods_cost_dollars=postdata["goods_cost_dollars"],
+                goods_cost_cedis=postdata["goods_cost_cedis"],
+                goods_desc=postdata["goods_desc"],
+                supplier_id=Supplier.objects.get(id=supplier.id),
+                goods_weight=postdata["goods_weight"])
+
+            new_supplierpayments.save()
+
+            serializer = SupplierPaymentSerializers(new_supplierpayments)
+            return Response(serializer.data)
+        else:
+            return Response('consignment is not open, you need to Open a new consignment before you can add supplied goods')
 
 
 class SupplierPaymentDetailsView(APIView):
@@ -389,11 +438,30 @@ class FreightSerializersView(APIView):
             # date=postdata["date"],
             payment_id=new_payment,
             total_weight=postdata["total_weight"],
-            amount_sent_cedis=postdata["amount_sent_cedis"],
+            amount_sent_dollars=postdata["amount_sent_cedis"],
             goods_desc=postdata["goods_desc"])
 
         # print(new_freight)
         # exit()
         new_freight.save()
         serializer = FreightSerializers(new_freight)
+        return Response(serializer.data)
+
+
+class FreightDetailsView(APIView):
+    def get(self, request, pk):
+        freight = Freight.objects.get(id=pk)
+        serializer = FreightSerializers(freight, many=False)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        freight_obj = Freight.objects.get(id=pk)
+        data = request.data
+        print(data)
+        
+        freight_obj.picked_up = data['checked']
+
+        freight_obj.save()
+
+        serializer = FreightSerializers(freight_obj)
         return Response(serializer.data)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser, Customer, Transfer, Supplier, SupplierPayment, Payment, Freight
+from .models import CustomUser, Customer, Transfer, Supplier, SupplierPayment, Payment, Freight, Consignment
 
 
 class CustomUserSerializers(serializers.ModelSerializer):
@@ -81,3 +81,9 @@ class FreightSerializers(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['id']
         depth = 2
+
+class ConsignmentSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Consignment
+        fields = '__all__'
+        read_only_fields = ['id']
