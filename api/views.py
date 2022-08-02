@@ -239,20 +239,20 @@ class SupplierPaymentView(APIView):
                 company_name__iexact=postdata["supplier"])
             # print(supplier.id)
 
-        # get consignment with status open and city Terkey
+        # get consignment with status open and city Turkey
         consignment = Consignment.objects.filter(
-            status='open', city='Terkey')
+            status='open', city='Turkey')
 
         # check if consignment is open for shipment
         if consignment.exists():
-            # select Freight with consignment status open and city Terkey and the customer already have an entry in that consignment then update customers entry else make a new entry
+            # select Freight with consignment status open and city Turkey and the customer already have an entry in that consignment then update customers entry else make a new entry
             getFreight = Freight.objects.filter(customer_id__id=customerByCustomUserId.id,
-                                                consignment_id__status='open', consignment_id__city='Terkey')
+                                                consignment_id__status='open', consignment_id__city='Turkey')
 
             if getFreight.exists():
                 # get editable object to object content with ease
                 getEditableFreightObject = Freight.objects.filter(customer_id__id=customerByCustomUserId.id,
-                                                                  consignment_id__status='open', consignment_id__city='Terkey').get()
+                                                                  consignment_id__status='open', consignment_id__city='Turkey').get()
                 # update freight total weight
                 getEditableFreightObject.total_weight += float(
                     postdata["goods_weight"])
@@ -269,7 +269,7 @@ class SupplierPaymentView(APIView):
                 getEditableFreightObject.save()
             else:
                 getEditableConsignmentObject = Consignment.objects.filter(
-                    status='open', city='Terkey').get()
+                    status='open', city='Turkey').get()
 
                 new_paymentForFreight = Payment.objects.create(
                     # date=postdata["date"],
@@ -458,10 +458,51 @@ class FreightDetailsView(APIView):
         freight_obj = Freight.objects.get(id=pk)
         data = request.data
         print(data)
-        
+
         freight_obj.picked_up = data['checked']
 
         freight_obj.save()
 
         serializer = FreightSerializers(freight_obj)
+        return Response(serializer.data)
+
+
+class ConsignmentListView(APIView):
+    def get(self, request):
+        consignment = Consignment.objects.filter(status="open")
+        serializer = ConsignmentSerializers(consignment, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        postdata = request.data
+        # print(postdata)
+
+        # get check if a consignment is available in Turkey. if true then you cannot create a new consignment
+        consignment = Consignment.objects.filter(city="Turkey")
+        print(consignment.exists())
+        # exit()
+        if consignment.exists():
+            return Response('There is a consignment already open in Turkey, you cant open two consignments in Turkey')
+        else:
+            # create a new consignment
+            new_consignment = Consignment.objects.create(
+                status=postdata["status"],
+                city=postdata["city"],
+                timestamp=postdata["timestamp"],
+                updated=postdata["updated"]
+            )
+            new_consignment.save()
+            serializer = ConsignmentSerializers(new_consignment)
+            return Response(serializer.data)
+
+class ConsignmentListOpenAndInTurkeyView(APIView):
+    def get(self, request):
+        consignment = Consignment.objects.filter(status="open", city="Turkey")
+        serializer = ConsignmentSerializers(consignment, many=True)
+        return Response(serializer.data)
+
+class ConsignmentListOpenAndInAccraView(APIView):
+    def get(self, request):
+        consignment = Consignment.objects.filter(status="open", city="Accra")
+        serializer = ConsignmentSerializers(consignment, many=True)
         return Response(serializer.data)

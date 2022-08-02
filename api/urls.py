@@ -32,4 +32,10 @@ urlpatterns = [
          FreightSerializersView.as_view()),
     path('customerfreightdetails/<str:pk>/',
          FreightDetailsView.as_view()),
+    path('consignmentlist/',
+         ConsignmentListView.as_view()),
+    path('consignmentlistopenandinturkey/',
+         ConsignmentListOpenAndInTurkeyView.as_view()),
+    path('consignmentlistopenandinaccra/',
+         ConsignmentListOpenAndInAccraView.as_view()),
 ]
