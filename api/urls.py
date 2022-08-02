@@ -38,4 +38,6 @@ urlpatterns = [
          ConsignmentListOpenAndInTurkeyView.as_view()),
     path('consignmentlistopenandinaccra/',
          ConsignmentListOpenAndInAccraView.as_view()),
+    path('consignmentUpdate/<str:pk>/',
+         ConsignmentUpdateView.as_view()),     
 ]

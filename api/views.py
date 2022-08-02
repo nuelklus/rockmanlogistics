@@ -482,7 +482,10 @@ class ConsignmentListView(APIView):
         print(consignment.exists())
         # exit()
         if consignment.exists():
-            return Response('There is a consignment already open in Turkey, you cant open two consignments in Turkey')
+            d = dict()
+            d['StatusCode'] = 99
+            d['StatusMessage'] = 'There is a consignment already open in Turkey, you cant open two consignments in Turkey'
+            return Response(d)
         else:
             # create a new consignment
             new_consignment = Consignment.objects.create(
@@ -495,14 +498,34 @@ class ConsignmentListView(APIView):
             serializer = ConsignmentSerializers(new_consignment)
             return Response(serializer.data)
 
+
 class ConsignmentListOpenAndInTurkeyView(APIView):
     def get(self, request):
         consignment = Consignment.objects.filter(status="open", city="Turkey")
         serializer = ConsignmentSerializers(consignment, many=True)
         return Response(serializer.data)
 
+
 class ConsignmentListOpenAndInAccraView(APIView):
     def get(self, request):
         consignment = Consignment.objects.filter(status="open", city="Accra")
         serializer = ConsignmentSerializers(consignment, many=True)
+        return Response(serializer.data)
+
+class ConsignmentUpdateView(APIView):
+    # def get(self, request, pk):
+    #     freight = Freight.objects.get(id=pk)
+    #     serializer = FreightSerializers(freight, many=False)
+    #     return Response(serializer.data)
+
+    def put(self, request, pk):
+        consignment_obj = Consignment.objects.get(id=pk)
+        data = request.data
+        print(data)
+
+        consignment_obj.city = data['city']
+
+        consignment_obj.save()
+
+        serializer = ConsignmentSerializers(consignment_obj)
         return Response(serializer.data)
