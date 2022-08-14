@@ -27,9 +27,8 @@ class Transfer(models.Model):
     customer_id = models.ForeignKey(Customer, on_delete=models.CASCADE)
     date = models.DateField(auto_now_add=True, auto_now=False)
     amount_sent_dollars = models.FloatField()
-    amount_sent_cedis = models.FloatField()
-    balance = models.FloatField()
     payment_mode = models.CharField(max_length=20)
+    details = models.TextField(null=True, blank=True)
 
 
 class Payment(models.Model):

@@ -4,14 +4,154 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import *
 from django.db.models import Sum
+# from twilio.rest import Client
+# import pywhatkit as pwk
+# from heyoo import WhatsApp
+import requests
+import ssl
+import smtplib
+from email.message import EmailMessage
+from fpdf import FPDF
+from datetime import datetime
 
 
-# Create your views here.
+def Invoice(amountPaid, customerName, paymentMode, paymentDate, transferDetails, Supplier, transactionType):
+    class PDF(FPDF):
+
+        # PDF HEADER
+        def header(self):
+            transaction_type = '            ' + transactionType + ' Invoice'
+            self.image('rockman-logo.png', 10, 2, 20)
+            self.set_text_color(3, 82, 140)
+            self.set_font('helvetica', 'B', 14)
+            self.cell(0, 5, transaction_type, ln=True, align='R')
+            self.ln(10)
+
+        # PDF HEADER
+
+        def footer(self):
+            Date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.set_y(-10)
+            self.cell(0, -6, '', 'B', 1, 'C')
+
+            self.set_font('helvetica', '', size=6)
+            self.cell(35, 5, Date_created, align='L')
+            self.set_text_color(176, 84, 14)
+            self.cell(70, 5, 'Rockman Logistics : Freight shipping services',
+                      ln=True, align='L')
+
+            # pdf.cell(80, 5, 'Rockman Logistics : Freight shipping services', ln=True, align='R')
+
+    AmountPaidInDallars = '$' + amountPaid
+    CustomerName = customerName
+    PaymentMode = paymentMode
+    PaymentDate = paymentDate
+    TransferDetails = transferDetails
+
+    pdf = PDF('P', 'mm', (105, 150))
+    pdf.add_page()
+    pdf.set_text_color(74, 74, 75)
+    pdf.set_font('helvetica', '', size=8)
+    pdf.cell(0, -6, '', 'B', 1, 'C')
+    pdf.set_font('helvetica', '', size=6)
+    # pdf.cell(35, 5, 'Date_created', align='L')
+    pdf.set_text_color(176, 84, 14)
+    pdf.cell(
+        0, 5, 'Phone : +233202729851/+233202729851     Email : nuelklus@gmail.com',  align='C')
+    pdf.set_xy(10, 30)
+    pdf.set_font('helvetica', '', size=8)
+    pdf.set_text_color(74, 74, 75)
+
+    # Customer
+    pdf.cell(35, 7, 'Customer', align='L')
+    pdf.cell(10, 7, ':', align='C')
+    pdf.cell(35, 7, CustomerName, ln=True, align='L')
+    # Total Amount Paid
+    pdf.cell(35, 7, 'Amount', align='L')
+    pdf.cell(10, 7, ':', align='C')
+    pdf.cell(35, 7, AmountPaidInDallars, ln=True, align='L')
+    # payment Mode
+    pdf.cell(35, 7, 'Payment Mode', align='L')
+    pdf.cell(10, 7, ':', align='C')
+    pdf.cell(35, 7, PaymentMode, ln=True, align='L')
+    # payment Date
+    pdf.cell(35, 7, 'Payment Date', align='L')
+    pdf.cell(10, 7, ':', align='C')
+    pdf.cell(35, 7, PaymentDate, ln=True, align='L')
+
+    if(transactionType == 'Transfer'):
+        # Transfer Details
+        pdf.cell(35, 7, 'Transfer Details', ln=True, align='L')
+        pdf.set_font('helvetica', '', size=7)
+        pdf.cell(0, 2, '', ln=True, align='C')
+        pdf.multi_cell(0, 5, TransferDetails, border=1, ln=True, align='L')
+    else:
+        # Supplier info
+        pdf.cell(35, 7, 'Supplier', align='L')
+        pdf.cell(10, 7, ':', align='C')
+        pdf.cell(35, 7, Supplier, ln=True, align='L')
+
+    # Messages to customer or information and more
+    pdf.cell(0, 25, '', ln=True, align='C')
+
+    pdf.set_font('helvetica', '', size=12)
+    pdf.cell(0, 5, 'Thank you !!!', ln=True, align='C')
+    if (transactionType == 'Transfer'):
+        pdf.output("Transfer_Invoice.pdf")
+    else:
+        pdf.output("Supplier_Payment_Invoice.pdf")
+
+
+def SendSMS(content, customerPhone):
+    # send SMS using hubtel
+    payload = {"clientsecret": "fdkfusvx", "clientid": "zresivmf",
+               "from": "RockmanLOG", "to": customerPhone, "content": content}
+    r = requests.get(
+        "https://smsc.hubtel.com/v1/messages/send", payload)
+    print(r)
+
+
+def SendEmail(emailReceiver, transactionType):
+    # how to send emails using gmail stmp service
+    email_sender = 'nuelklus@gmail.com'
+    email_password = 'vuugipsunycollrs'
+    email_receiver = emailReceiver
+
+    msg = EmailMessage()
+    msg['Subject'] = 'Transaction receipt from pfd'
+    msg['From'] = 'rockman@gmail.com'
+    msg['To'] = email_receiver
+    msg.set_content('Tranfer receipt from Rockman')
+
+    # Create a secure SSL context
+    # context = ssl.create_default_context()
+    if(transactionType == 'Transfer'):
+        with open('Transfer_Invoice.pdf', 'rb') as f:
+            file_data = f.read()
+            file_name = f.name
+    else:
+        with open('Supplier_Payment_Invoice.pdf', 'rb') as f:
+            file_data = f.read()
+            file_name = f.name
+    msg.add_attachment(file_data, maintype='application',
+                       subtype='octet-stream', filename=file_name)
+
+    with smtplib.SMTP('smtp.gmail.com', 587) as smtp:
+        smtp.ehlo()
+        smtp.starttls()
+        smtp.ehlo()
+
+        smtp.login(email_sender, email_password)
+        smtp.send_message(msg)
+
 
 class CustomUserListView(APIView):
 
     def get(self, request):
         customUsers = CustomUser.objects.all()
+
+        # SendSMS('test content', '233557911415')
+        # SendEmail()
         serializer = CustomUserSerializers(customUsers, many=True)
         return Response(serializer.data)
 
@@ -65,11 +205,18 @@ class CustomerListView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = CustomerSerializers(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # print("request.data.username", request.data['user_id']['username'])
+        getUsername = CustomUser.objects.filter(
+            username=request.data['user_id']['username'])
+        if(getUsername.exists()):
+            return Response('user already exist')
+
+        else:
+            serializer = CustomerSerializers(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CustomerDetailsView(APIView):
@@ -111,14 +258,12 @@ class CustomerTranferView(APIView):
 
     def post(self, request):
         transferData = request.data
-        print(transferData)
-        # exit()
 
         # get cutomer id with the username from the frontend form
         customer = CustomUser.objects.filter(
             username__iexact=transferData["username"]).get()
 
-        print(customer.id)
+        # print(customer.id)
 
         # money transferred by a customer must be added to the customers balance in the customer table
         customerByCustomUserId = Customer.objects.filter(
@@ -126,21 +271,48 @@ class CustomerTranferView(APIView):
         selectedCustomer = Customer.objects.get(id=customerByCustomUserId.id)
         selectedCustomer.account_balance += float(
             transferData["amount_sent_dollars"])
-        # print(type(transferData["amount_sent_dollars"]))
-        # exit()
-        # selectedCustomer.account_balance += 10.2
-        print(customerByCustomUserId.id)
         selectedCustomer.save()
 
-        # exit()
-        # new_transfer = Transfer.objects.create(customer_id=Customer.objects.get(id=customer.id),
-        new_transfer = Transfer.objects.create(customer_id=Customer.objects.get(id=customerByCustomUserId.id),
-                                               amount_sent_dollars=transferData[
-                                                   "amount_sent_dollars"], amount_sent_cedis=transferData["amount_sent_cedis"],
-                                               balance=transferData["balance"], payment_mode=transferData["payment_mode"])
+        new_transfer = Transfer.objects.create(customer_id=Customer.objects.get(id=customerByCustomUserId.id), amount_sent_dollars=transferData[
+            "amount_sent_dollars"], payment_mode=transferData["payment_mode"], details=transferData["details"])
+
         new_transfer.save()
-        serializer = TransferSerializers(new_transfer)
-        return Response(serializer.data)
+        new_transfer_saved = new_transfer.id
+
+        if new_transfer_saved:
+            customerName = new_transfer.customer_id.user_id.first_name + \
+                ' ' + new_transfer.customer_id.user_id.last_name
+            customerPhone = new_transfer.customer_id.user_id.phone_no
+            customerPhoneInternationalStandard = '233' + customerPhone
+            paymentInDollars = new_transfer.amount_sent_dollars
+            PaymentMode = new_transfer.payment_mode
+            PaymentDate = new_transfer.date
+            tranferDetails = new_transfer.details
+            customerEmail = new_transfer.customer_id.user_id.email
+
+            content = 'Dear ' + customerName + ' , ' + 'your transfer payment receipt of ' + '$' + \
+                str(paymentInDollars) + ' made on ' + str(PaymentDate) + \
+                '.' + 'Payment mode ' + PaymentMode + ' .'
+            # send SMS to customer
+            SendSMS(content, customerPhoneInternationalStandard)
+            d = dict()
+            d['hasEmailAddress'] = False
+
+            if new_transfer.customer_id.user_id.email:
+                # Add customer email availability to return object
+                d['hasEmailAddress'] = True
+                # supplier = Supplier
+                # generate customer pdf file, Example : Tranfer_Invoice.pdf
+                Invoice(str(paymentInDollars), customerName,
+                        PaymentMode, str(PaymentDate),  tranferDetails, 'supplier', 'Transfer')
+
+                # send Email to customer
+                SendEmail(customerEmail, 'Transfer')
+            serializer = TransferSerializers(new_transfer)
+            d['data'] = serializer.data
+            return Response(d)
+        else:
+            return Response('Transfer object failed to save')
 
 
 class CustomerTranferDetailsView(APIView):
@@ -242,7 +414,7 @@ class SupplierPaymentView(APIView):
         # get consignment with status open and city Turkey
         consignment = Consignment.objects.filter(
             status='open', city='Turkey')
-
+        d = dict()
         # check if consignment is open for shipment
         if consignment.exists():
             # select Freight with consignment status open and city Turkey and the customer already have an entry in that consignment then update customers entry else make a new entry
@@ -303,11 +475,44 @@ class SupplierPaymentView(APIView):
                 goods_weight=postdata["goods_weight"])
 
             new_supplierpayments.save()
+            new_supplierpayment_saved = new_supplierpayments.id
+            #
+            if new_supplierpayment_saved:
+                customerName = new_supplierpayments.customer_id.user_id.first_name + \
+                    ' ' + new_supplierpayments.customer_id.user_id.last_name
+                customerPhone = new_supplierpayments.customer_id.user_id.phone_no
+                customerPhoneInternationalStandard = '233' + customerPhone
+                paymentInDollars = new_supplierpayments.payment_id.amount_sent_cedis
+                PaymentMode = new_supplierpayments.payment_id.payment_mode
+                PaymentDate = new_supplierpayments.payment_id.date
+                supplierCompany = new_supplierpayments.supplier_id.company_name
+                customerEmail = new_supplierpayments.customer_id.user_id.email
 
-            serializer = SupplierPaymentSerializers(new_supplierpayments)
-            return Response(serializer.data)
+                content = 'Dear ' + customerName + ' , ' + ' your supplier payment receipt of ' + '$' + \
+                    str(paymentInDollars) + ' made on ' + str(PaymentDate) + \
+                    ' to  ' + supplierCompany + '.'
+
+                # send SMS to customer
+                SendSMS(content, customerPhoneInternationalStandard)
+                d['hasEmailAddress'] = False
+
+                if new_supplierpayments.customer_id.user_id.email:
+                    # Add customer email availability to return object
+                    d['hasEmailAddress'] = True
+                    transactionType='Supplier Payment'
+                    # generate customer pdf file, Example : Tranfer_Invoice.pdf
+                    Invoice(str(paymentInDollars), customerName,
+                            PaymentMode, str(PaymentDate), 'Transfer details', supplierCompany, transactionType)
+                    # send Email to customer
+                    SendEmail(customerEmail, 'Supplier Payment')
+                serializer = SupplierPaymentSerializers(new_supplierpayments)
+                d['data'] = serializer.data
+                return Response(d)
         else:
-            return Response('consignment is not open, you need to Open a new consignment before you can add supplied goods')
+            d['hasEmailAddress'] = False
+            d['StatusCode'] = 99
+            d['StatusMessage'] = 'There is no open consignment in Turkey, you need to Open a new consignment before you can add supplied goods'
+            return Response(d)
 
 
 class SupplierPaymentDetailsView(APIView):
@@ -511,6 +716,7 @@ class ConsignmentListOpenAndInAccraView(APIView):
         consignment = Consignment.objects.filter(status="open", city="Accra")
         serializer = ConsignmentSerializers(consignment, many=True)
         return Response(serializer.data)
+
 
 class ConsignmentUpdateView(APIView):
     # def get(self, request, pk):

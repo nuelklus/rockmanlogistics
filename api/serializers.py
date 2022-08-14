@@ -22,8 +22,6 @@ class CustomerSerializers(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = '__all__'
-        # fields = ['user_id', 'dept']
-        # read_only_fields = ['id']
 
     def create(self, validated_data):
         """
@@ -32,10 +30,8 @@ class CustomerSerializers(serializers.ModelSerializer):
         :return: returns a successfully created student record
         """
         user_data = validated_data.pop('user_id')
-        print(user_data)
         user = CustomUserSerializers.create(
             CustomUserSerializers(), validated_data=user_data)
-        print(user)
         customer, created = Customer.objects.update_or_create(user_id=user, account_balance=validated_data.pop(
             'account_balance'), dept=validated_data.pop('dept'), company_name=validated_data.pop('company_name'))
         return customer
