@@ -4,9 +4,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import *
 from django.db.models import Sum
-# from twilio.rest import Client
-# import pywhatkit as pwk
-# from heyoo import WhatsApp
 import requests
 import ssl
 import smtplib
