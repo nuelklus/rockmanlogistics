@@ -9,12 +9,26 @@ class CustomUserSerializers(serializers.ModelSerializer):
         # read_only_fields = ['id']
         depth = 1
 
+
+class RegisterSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'username', 'email', 'password')
+        extra_kwargs = {'password': {'write_only': True}}
+    
+    def create(self, validated_data):
+        user = CustomUser.objects.create_user(validated_data['username'], validated_data['email'], validated_data['password'])
+
+        return user
+
+
 class CustomerUpdateSerializers(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = '__all__'
         # read_only_fields = ['id']
         depth = 1
+
 
 class CustomerSerializers(serializers.ModelSerializer):
     user_id = CustomUserSerializers()
@@ -44,6 +58,7 @@ class TransferSerializers(serializers.ModelSerializer):
         read_only_fields = ['id']
         depth = 2
 
+
 class SupplierSerializers(serializers.ModelSerializer):
     class Meta:
         model = Supplier
@@ -60,10 +75,12 @@ class SupplierPaymentSerializers(serializers.ModelSerializer):
         read_only_fields = ['id']
         depth = 3
 
+
 class TransferSumSerializers(serializers.ModelSerializer):
     class Meta:
         model = Transfer
         fields = ['amount_sent_dollars']
+
 
 class SupplierPaymentSumSerializers(serializers.ModelSerializer):
     class Meta:
@@ -77,6 +94,7 @@ class FreightSerializers(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['id']
         depth = 2
+
 
 class ConsignmentSerializers(serializers.ModelSerializer):
     class Meta:

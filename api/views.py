@@ -1,7 +1,11 @@
+from django.contrib.auth import login
+from knox.views import LoginView as KnoxLoginView
+from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework import permissions
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, generics
 from .serializers import *
 from django.db.models import Sum
 import requests
@@ -10,6 +14,8 @@ import smtplib
 from email.message import EmailMessage
 from fpdf import FPDF
 from datetime import datetime
+from knox.models import AuthToken
+# from rest_framework import generics
 
 
 def Invoice(amountPaid, customerName, paymentMode, paymentDate, transferDetails, Supplier, transactionType):
@@ -115,7 +121,7 @@ def SendEmail(emailReceiver, transactionType):
     email_receiver = emailReceiver
 
     msg = EmailMessage()
-    msg['Subject'] = 'Transaction receipt from pfd'
+    msg['Subject'] = 'Transaction receipt from Rockman Logistics'
     msg['From'] = 'rockman@gmail.com'
     msg['To'] = email_receiver
     msg.set_content('Tranfer receipt from Rockman')
@@ -158,6 +164,39 @@ class CustomUserListView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RegisterUserView(APIView):
+    def post(self, request):
+        serializer = RegisterSerializers(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        serializer = RegisterSerializers(user)
+
+        return Response({
+            "user": serializer.data,
+            "token": AuthToken.objects.create(user)[1]
+        })
+
+
+class LoginAPI(KnoxLoginView):
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request, format=None):
+        serializer = AuthTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        login(request, user)
+        return super(LoginAPI, self).post(request, format=None)
+
+
+class StaffUserAPI(generics.RetrieveAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    serializer_class = CustomUserSerializers
+
+    def get_object(self):
+        return self.request.user
 
 
 class CustomerDetailsViewByUsername(APIView):
@@ -285,7 +324,7 @@ class CustomerTranferView(APIView):
             PaymentMode = new_transfer.payment_mode
             PaymentDate = new_transfer.date
             tranferDetails = new_transfer.details
-            customerEmail = new_transfer.customer_id.user_id.email
+            customerEmail = 'e_klutse@yahoo.com'
 
             content = 'Dear ' + customerName + ' , ' + 'your transfer payment receipt of ' + '$' + \
                 str(paymentInDollars) + ' made on ' + str(PaymentDate) + \
@@ -293,18 +332,13 @@ class CustomerTranferView(APIView):
             # send SMS to customer
             SendSMS(content, customerPhoneInternationalStandard)
             d = dict()
-            d['hasEmailAddress'] = False
 
-            if new_transfer.customer_id.user_id.email:
-                # Add customer email availability to return object
-                d['hasEmailAddress'] = True
-                # supplier = Supplier
-                # generate customer pdf file, Example : Tranfer_Invoice.pdf
-                Invoice(str(paymentInDollars), customerName,
-                        PaymentMode, str(PaymentDate),  tranferDetails, 'supplier', 'Transfer')
+            # generate customer pdf file, Example : Tranfer_Invoice.pdf
+            Invoice(str(paymentInDollars), customerName,
+                    PaymentMode, str(PaymentDate),  tranferDetails, 'supplier', 'Transfer')
 
-                # send Email to customer
-                SendEmail(customerEmail, 'Transfer')
+            # send Email to customer
+            SendEmail(customerEmail, 'Transfer')
             serializer = TransferSerializers(new_transfer)
             d['data'] = serializer.data
             return Response(d)
@@ -483,7 +517,7 @@ class SupplierPaymentView(APIView):
                 PaymentMode = new_supplierpayments.payment_id.payment_mode
                 PaymentDate = new_supplierpayments.payment_id.date
                 supplierCompany = new_supplierpayments.supplier_id.company_name
-                customerEmail = new_supplierpayments.customer_id.user_id.email
+                customerEmail = 'e_klutse@yahoo.com'
 
                 content = 'Dear ' + customerName + ' , ' + ' your supplier payment receipt of ' + '$' + \
                     str(paymentInDollars) + ' made on ' + str(PaymentDate) + \
@@ -491,17 +525,15 @@ class SupplierPaymentView(APIView):
 
                 # send SMS to customer
                 SendSMS(content, customerPhoneInternationalStandard)
-                d['hasEmailAddress'] = False
 
-                if new_supplierpayments.customer_id.user_id.email:
-                    # Add customer email availability to return object
-                    d['hasEmailAddress'] = True
-                    transactionType='Supplier Payment'
-                    # generate customer pdf file, Example : Tranfer_Invoice.pdf
-                    Invoice(str(paymentInDollars), customerName,
-                            PaymentMode, str(PaymentDate), 'Transfer details', supplierCompany, transactionType)
-                    # send Email to customer
-                    SendEmail(customerEmail, 'Supplier Payment')
+                # send email to rockman
+
+                transactionType = 'Supplier Payment'
+                # generate customer pdf file, Example : Tranfer_Invoice.pdf
+                Invoice(str(paymentInDollars), customerName,
+                        PaymentMode, str(PaymentDate), 'Transfer details', supplierCompany, transactionType)
+                # send Email to customer
+                SendEmail(customerEmail, 'Supplier Payment')
                 serializer = SupplierPaymentSerializers(new_supplierpayments)
                 d['data'] = serializer.data
                 return Response(d)
