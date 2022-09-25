@@ -15,6 +15,7 @@ from email.message import EmailMessage
 from fpdf import FPDF
 from datetime import datetime
 from knox.models import AuthToken
+from datetime import datetime
 # from rest_framework import generics
 
 
@@ -318,17 +319,20 @@ class CustomerTranferView(APIView):
         if new_transfer_saved:
             customerName = new_transfer.customer_id.user_id.first_name + \
                 ' ' + new_transfer.customer_id.user_id.last_name
+            customerBalance = new_transfer.customer_id.account_balance
             customerPhone = new_transfer.customer_id.user_id.phone_no
             customerPhoneInternationalStandard = '233' + customerPhone
             paymentInDollars = new_transfer.amount_sent_dollars
             PaymentMode = new_transfer.payment_mode
             PaymentDate = new_transfer.date
             tranferDetails = new_transfer.details
-            customerEmail = 'e_klutse@yahoo.com'
+            customerEmail = 'info@rockmanlogisticsgh.com'
+            # print(customerBalance)
+            # exit()
 
-            content = 'Dear ' + customerName + ' , ' + 'your transfer payment receipt of ' + '$' + \
-                str(paymentInDollars) + ' made on ' + str(PaymentDate) + \
-                '.' + 'Payment mode ' + PaymentMode + ' .'
+            content = 'Dear ' + customerName + ', ' + 'Receipt of transfer payment of ' + '$' + \
+                str(paymentInDollars)+ '.00' + ' on ' + str(PaymentDate) + \
+                ' with current balance of' + '$ ' + str(format(customerBalance, '.2f')) + '.'
             # send SMS to customer
             SendSMS(content, customerPhoneInternationalStandard)
             d = dict()
@@ -464,7 +468,7 @@ class SupplierPaymentView(APIView):
                     id=getEditableFreightObject.payment_id.id)
                 print(getEditablePaymentObject.amount_sent_cedis)
                 getEditablePaymentObject.amount_sent_cedis = (
-                    getEditableFreightObject.total_weight) * 2
+                    getEditableFreightObject.total_weight) * 8
                 # print(getEditableFreightObject.payment_id.amount_sent_cedis)
                 getEditablePaymentObject.save()
                 # exit()
@@ -479,7 +483,7 @@ class SupplierPaymentView(APIView):
                     status=postdata["payment_id"]["status"], payment_mode=postdata["payment_id"]["payment_mode"],
                     balance=postdata["payment_id"]["balance"], dept=postdata["payment_id"]["dept"],
                     # amount_sent_dollars=postdata["payment_id"]["amount_sent_dollars"],
-                    amount_sent_cedis=postdata["goods_weight"]*2, transaction_type="freight")
+                    amount_sent_cedis=postdata["goods_weight"]*8, transaction_type="freight")
 
                 new_freight = Freight.objects.create(
                     customer_id=Customer.objects.get(
@@ -511,17 +515,18 @@ class SupplierPaymentView(APIView):
             if new_supplierpayment_saved:
                 customerName = new_supplierpayments.customer_id.user_id.first_name + \
                     ' ' + new_supplierpayments.customer_id.user_id.last_name
+                customerBalance = new_supplierpayments.customer_id.account_balance
                 customerPhone = new_supplierpayments.customer_id.user_id.phone_no
                 customerPhoneInternationalStandard = '233' + customerPhone
                 paymentInDollars = new_supplierpayments.payment_id.amount_sent_cedis
                 PaymentMode = new_supplierpayments.payment_id.payment_mode
                 PaymentDate = new_supplierpayments.payment_id.date
                 supplierCompany = new_supplierpayments.supplier_id.company_name
-                customerEmail = 'e_klutse@yahoo.com'
+                customerEmail = 'info@rockmanlogisticsgh.com'
 
-                content = 'Dear ' + customerName + ' , ' + ' your supplier payment receipt of ' + '$' + \
-                    str(paymentInDollars) + ' made on ' + str(PaymentDate) + \
-                    ' to  ' + supplierCompany + '.'
+                content = 'Dear ' + customerName + ', ' + 'Receipt of supply payment of '  + '$' + \
+                    str(paymentInDollars) + '.00' + ' on ' + str(PaymentDate) + \
+                    ' to  ' + supplierCompany + ' with current balance of $ ' + str(format(customerBalance, '.2f')) + '.'
 
                 # send SMS to customer
                 SendSMS(content, customerPhoneInternationalStandard)
@@ -648,38 +653,76 @@ class FreightSerializersView(APIView):
 
     def post(self, request):
         postdata = request.data
-        # print(postdata)
-
         # get cutomer id with the username from the frontend form
         customer = CustomUser.objects.filter(
             username__iexact=postdata["username"]).get()
+        # print(customer.id)
 
+        # money paid by a customer must be subtracted from the customers balance in the customer model
         customerByCustomUserId = Customer.objects.filter(
             user_id__id=customer.id).get()
-        print(customerByCustomUserId.id)
-        # exit()
 
-        # create payment object
-        new_payment = Payment.objects.create(
-            # date=postdata["date"],
-            status=postdata["payment_id"]["status"], payment_mode=postdata["payment_id"]["payment_mode"],
-            balance=postdata["payment_id"]["balance"], dept=postdata["payment_id"]["dept"],
-            # amount_sent_dollars=postdata["payment_id"]["amount_sent_dollars"],
-            amount_sent_cedis=postdata["payment_id"]["amount_sent_cedis"], transaction_type=postdata["payment_id"]["transaction_type"])
+        #
+        getFreight = Freight.objects.filter(customer_id__id=customerByCustomUserId.id,
+                                            consignment_id__status='open', consignment_id__city='Turkey')
 
-        new_freight = Freight.objects.create(
-            customer_id=Customer.objects.get(id=customerByCustomUserId.id),
-            # date=postdata["date"],
-            payment_id=new_payment,
-            total_weight=postdata["total_weight"],
-            amount_sent_dollars=postdata["amount_sent_cedis"],
-            goods_desc=postdata["goods_desc"])
+        if getFreight.exists():
+            # get editable object to object content with ease
+            getEditableFreightObject = Freight.objects.filter(customer_id__id=customerByCustomUserId.id,
+                                                              consignment_id__status='open', consignment_id__city='Turkey').get()
+            # update freight total weight
+            getEditableFreightObject.total_weight += float(
+                postdata["total_weight"])
+            totalWeightValue = getEditableFreightObject.total_weight
 
-        # print(new_freight)
-        # exit()
-        new_freight.save()
-        serializer = FreightSerializers(new_freight)
-        return Response(serializer.data)
+            getEditablePaymentObject = Payment.objects.get(
+                id=getEditableFreightObject.payment_id.id)
+            print(getEditablePaymentObject.amount_sent_cedis)
+            getEditablePaymentObject.amount_sent_cedis = totalWeightValue * 8
+            print(getEditablePaymentObject.amount_sent_cedis)
+            getEditablePaymentObject.save()
+
+            # exit()
+
+            getEditableFreightObject.save()
+            serializer = FreightSerializers(getEditableFreightObject)
+            return Response(serializer.data)
+        else:
+            # get open and city is Turkey consignment
+            getEditableConsignmentObject = Consignment.objects.filter(
+                status='open', city='Turkey').get()
+
+            # get cutomer id with the username from the frontend form
+            customer = CustomUser.objects.filter(
+                username__iexact=postdata["username"]).get()
+
+            customerByCustomUserId = Customer.objects.filter(
+                user_id__id=customer.id).get()
+            # print(getEditableConsignmentObject.id)
+            # exit()
+
+            # create payment object
+            new_payment = Payment.objects.create(
+                # date=postdata["date"],
+                status=postdata["payment_id"]["status"], payment_mode=postdata["payment_id"]["payment_mode"],
+                balance=postdata["payment_id"]["balance"], dept=postdata["payment_id"]["dept"],
+                # amount_sent_dollars=postdata["payment_id"]["amount_sent_dollars"],
+                amount_sent_cedis=postdata["total_weight"]*8, transaction_type='Freight')
+
+            new_freight = Freight.objects.create(
+                customer_id=Customer.objects.get(id=customerByCustomUserId.id),
+                # date=postdata["date"],
+                consignment_id=getEditableConsignmentObject.id,
+                payment_id=new_payment,
+                total_weight=postdata["total_weight"],
+                # amount_sent_dollars=postdata["amount_sent_cedis"],
+                goods_desc=postdata["goods_desc"])
+
+            # print(new_freight)
+            # exit()
+            new_freight.save()
+            serializer = FreightSerializers(new_freight)
+            return Response(serializer.data)
 
 
 class FreightDetailsView(APIView):
@@ -694,6 +737,32 @@ class FreightDetailsView(APIView):
         print(data)
 
         freight_obj.picked_up = data['checked']
+
+        freight_obj.save()
+
+        serializer = FreightSerializers(freight_obj)
+        return Response(serializer.data)
+
+
+class FreightUpdateIsPaidView(APIView):
+    def put(self, request, pk):
+        freight_obj = Freight.objects.get(id=pk)
+        data = request.data
+
+        freight_obj.isPaid = data['isPaid']
+
+        freight_obj.save()
+
+        serializer = FreightSerializers(freight_obj)
+        return Response(serializer.data)
+
+
+class FreightUpdateNoteView(APIView):
+    def put(self, request, pk):
+        freight_obj = Freight.objects.get(id=pk)
+        data = request.data
+
+        freight_obj.note = data['note']
 
         freight_obj.save()
 
@@ -756,7 +825,6 @@ class ConsignmentUpdateView(APIView):
     def put(self, request, pk):
         consignment_obj = Consignment.objects.get(id=pk)
         data = request.data
-        print(data)
 
         consignment_obj.city = data['city']
 
@@ -764,3 +832,47 @@ class ConsignmentUpdateView(APIView):
 
         serializer = ConsignmentSerializers(consignment_obj)
         return Response(serializer.data)
+
+class ConsignmentUpdateStatusView(APIView):
+    def put(self, request, pk):
+        consignment_obj = Consignment.objects.get(id=pk)
+        data = request.data
+
+        consignment_obj.status = data['status']
+
+        consignment_obj.save()
+
+        serializer = ConsignmentSerializers(consignment_obj)
+        return Response(serializer.data)
+
+
+class FreightSendSMSView(APIView):
+    def post(self, request):
+        postdata = request.data
+        
+        d = dict()
+        d['StatusCode'] = '99'
+        d['StatusMessage'] = 'Sending messsages failed'
+        consigmentInAccra = Freight.objects.select_related(
+            'customer_id', 'customer_id__user_id').filter(consignment_id=postdata['consignment_number'])
+
+        for px in consigmentInAccra:
+            customerPhone = px.customer_id.user_id.phone_no
+            customerPhoneInternationalStandard = '233' + customerPhone
+
+            customerName = px.customer_id.user_id.first_name + \
+                ' ' + px.customer_id.user_id.last_name
+            freightCost = (px.total_weight + 0.00) * 8.00
+            pickDate = postdata['pickup_date']
+            
+            content = 'Dear ' + customerName + ' , ' + 'your freight cost' + ' $' + \
+                str(format(freightCost, '.2f')) + \
+                ', Pickup Date is ' + pickDate + ' .'
+
+            
+            # send SMS to customer
+            SendSMS(content, customerPhoneInternationalStandard)
+            
+            d['StatusCode'] = '01'
+            d['StatusMessage'] = 'Messages sent to all customers successfully'
+        return Response(d)

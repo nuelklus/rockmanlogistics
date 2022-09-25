@@ -78,6 +78,8 @@ class Freight(models.Model):
     date = models.DateField(auto_now_add=True)
     date_updated = models.DateField(auto_now=True)
     total_weight = models.FloatField()
-    # amount_sent_dollars = models.FloatField(null=True, blank=True)
+    note = models.CharField(default='Note', max_length=255,null=True, blank=True)
     goods_desc = models.CharField(max_length=255)
     picked_up = models.BooleanField(default=False, null=True, blank=True)
+    isPaid = models.BooleanField(default=False, null=True, blank=True)
+

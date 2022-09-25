@@ -34,6 +34,10 @@ urlpatterns = [
          FreightSerializersView.as_view()),
     path('customerfreightdetails/<str:pk>/',
          FreightDetailsView.as_view()),
+    path('customerfreightUpdateIsPaid/<str:pk>/',
+         FreightUpdateIsPaidView.as_view()),
+    path('customerfreightUpdateNote/<str:pk>/',
+         FreightUpdateNoteView.as_view()),
     path('consignmentlist/',
          ConsignmentListView.as_view()),
     path('consignmentlistopenandinturkey/',
@@ -42,11 +46,14 @@ urlpatterns = [
          ConsignmentListOpenAndInAccraView.as_view()),
     path('consignmentUpdate/<str:pk>/',
          ConsignmentUpdateView.as_view()),
+    path('consignmentstatusupdate/<str:pk>/',
+         ConsignmentUpdateStatusView.as_view()),
+    path('freightsendsms/',
+         FreightSendSMSView.as_view()),
     path('register/',
          RegisterUserView.as_view()),
     path('login/', LoginAPI.as_view()),
     path('logout/', knox_views.LogoutView.as_view(), name='logout'),
     path('staffuser/', StaffUserAPI.as_view()),
-    path('logoutall/', knox_views.LogoutAllView.as_view(), name='logoutall'),
-
+    path('logoutall/', knox_views.LogoutAllView.as_view(), name='logoutall')
 ]
