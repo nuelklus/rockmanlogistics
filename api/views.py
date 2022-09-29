@@ -19,91 +19,91 @@ from datetime import datetime
 # from rest_framework import generics
 
 
-def Invoice(amountPaid, customerName, paymentMode, paymentDate, transferDetails, Supplier, transactionType):
-    class PDF(FPDF):
+# def Invoice(amountPaid, customerName, paymentMode, paymentDate, transferDetails, Supplier, transactionType):
+#     class PDF(FPDF):
 
-        # PDF HEADER
-        def header(self):
-            transaction_type = '            ' + transactionType + ' Invoice'
-            self.image('rockman-logo.png', 10, 2, 20)
-            self.set_text_color(3, 82, 140)
-            self.set_font('helvetica', 'B', 14)
-            self.cell(0, 5, transaction_type, ln=True, align='R')
-            self.ln(10)
+#         # PDF HEADER
+#         def header(self):
+#             transaction_type = '            ' + transactionType + ' Invoice'
+#             self.image('rockman-logo.png', 10, 2, 20)
+#             self.set_text_color(3, 82, 140)
+#             self.set_font('helvetica', 'B', 14)
+#             self.cell(0, 5, transaction_type, ln=True, align='R')
+#             self.ln(10)
 
-        # PDF HEADER
+#         # PDF HEADER
 
-        def footer(self):
-            Date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.set_y(-10)
-            self.cell(0, -6, '', 'B', 1, 'C')
+#         def footer(self):
+#             Date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#             self.set_y(-10)
+#             self.cell(0, -6, '', 'B', 1, 'C')
 
-            self.set_font('helvetica', '', size=6)
-            self.cell(35, 5, Date_created, align='L')
-            self.set_text_color(176, 84, 14)
-            self.cell(70, 5, 'Rockman Logistics : Freight shipping services',
-                      ln=True, align='L')
+#             self.set_font('helvetica', '', size=6)
+#             self.cell(35, 5, Date_created, align='L')
+#             self.set_text_color(176, 84, 14)
+#             self.cell(70, 5, 'Rockman Logistics : Freight shipping services',
+#                       ln=True, align='L')
 
-            # pdf.cell(80, 5, 'Rockman Logistics : Freight shipping services', ln=True, align='R')
+#             # pdf.cell(80, 5, 'Rockman Logistics : Freight shipping services', ln=True, align='R')
 
-    AmountPaidInDallars = '$' + amountPaid
-    CustomerName = customerName
-    PaymentMode = paymentMode
-    PaymentDate = paymentDate
-    TransferDetails = transferDetails
+#     AmountPaidInDallars = '$' + amountPaid
+#     CustomerName = customerName
+#     PaymentMode = paymentMode
+#     PaymentDate = paymentDate
+#     TransferDetails = transferDetails
 
-    pdf = PDF('P', 'mm', (105, 150))
-    pdf.add_page()
-    pdf.set_text_color(74, 74, 75)
-    pdf.set_font('helvetica', '', size=8)
-    pdf.cell(0, -6, '', 'B', 1, 'C')
-    pdf.set_font('helvetica', '', size=6)
-    # pdf.cell(35, 5, 'Date_created', align='L')
-    pdf.set_text_color(176, 84, 14)
-    pdf.cell(
-        0, 5, 'Phone : +233202729851/+233202729851     Email : nuelklus@gmail.com',  align='C')
-    pdf.set_xy(10, 30)
-    pdf.set_font('helvetica', '', size=8)
-    pdf.set_text_color(74, 74, 75)
+#     pdf = PDF('P', 'mm', (105, 150))
+#     pdf.add_page()
+#     pdf.set_text_color(74, 74, 75)
+#     pdf.set_font('helvetica', '', size=8)
+#     pdf.cell(0, -6, '', 'B', 1, 'C')
+#     pdf.set_font('helvetica', '', size=6)
+#     # pdf.cell(35, 5, 'Date_created', align='L')
+#     pdf.set_text_color(176, 84, 14)
+#     pdf.cell(
+#         0, 5, 'Phone : +233202729851/+233202729851     Email : nuelklus@gmail.com',  align='C')
+#     pdf.set_xy(10, 30)
+#     pdf.set_font('helvetica', '', size=8)
+#     pdf.set_text_color(74, 74, 75)
 
-    # Customer
-    pdf.cell(35, 7, 'Customer', align='L')
-    pdf.cell(10, 7, ':', align='C')
-    pdf.cell(35, 7, CustomerName, ln=True, align='L')
-    # Total Amount Paid
-    pdf.cell(35, 7, 'Amount', align='L')
-    pdf.cell(10, 7, ':', align='C')
-    pdf.cell(35, 7, AmountPaidInDallars, ln=True, align='L')
-    # payment Mode
-    pdf.cell(35, 7, 'Payment Mode', align='L')
-    pdf.cell(10, 7, ':', align='C')
-    pdf.cell(35, 7, PaymentMode, ln=True, align='L')
-    # payment Date
-    pdf.cell(35, 7, 'Payment Date', align='L')
-    pdf.cell(10, 7, ':', align='C')
-    pdf.cell(35, 7, PaymentDate, ln=True, align='L')
+#     # Customer
+#     pdf.cell(35, 7, 'Customer', align='L')
+#     pdf.cell(10, 7, ':', align='C')
+#     pdf.cell(35, 7, CustomerName, ln=True, align='L')
+#     # Total Amount Paid
+#     pdf.cell(35, 7, 'Amount', align='L')
+#     pdf.cell(10, 7, ':', align='C')
+#     pdf.cell(35, 7, AmountPaidInDallars, ln=True, align='L')
+#     # payment Mode
+#     pdf.cell(35, 7, 'Payment Mode', align='L')
+#     pdf.cell(10, 7, ':', align='C')
+#     pdf.cell(35, 7, PaymentMode, ln=True, align='L')
+#     # payment Date
+#     pdf.cell(35, 7, 'Payment Date', align='L')
+#     pdf.cell(10, 7, ':', align='C')
+#     pdf.cell(35, 7, PaymentDate, ln=True, align='L')
 
-    if(transactionType == 'Transfer'):
-        # Transfer Details
-        pdf.cell(35, 7, 'Transfer Details', ln=True, align='L')
-        pdf.set_font('helvetica', '', size=7)
-        pdf.cell(0, 2, '', ln=True, align='C')
-        pdf.multi_cell(0, 5, TransferDetails, border=1, ln=True, align='L')
-    else:
-        # Supplier info
-        pdf.cell(35, 7, 'Supplier', align='L')
-        pdf.cell(10, 7, ':', align='C')
-        pdf.cell(35, 7, Supplier, ln=True, align='L')
+#     if(transactionType == 'Transfer'):
+#         # Transfer Details
+#         pdf.cell(35, 7, 'Transfer Details', ln=True, align='L')
+#         pdf.set_font('helvetica', '', size=7)
+#         pdf.cell(0, 2, '', ln=True, align='C')
+#         pdf.multi_cell(0, 5, TransferDetails, border=1, ln=True, align='L')
+#     else:
+#         # Supplier info
+#         pdf.cell(35, 7, 'Supplier', align='L')
+#         pdf.cell(10, 7, ':', align='C')
+#         pdf.cell(35, 7, Supplier, ln=True, align='L')
 
-    # Messages to customer or information and more
-    pdf.cell(0, 25, '', ln=True, align='C')
+#     # Messages to customer or information and more
+#     pdf.cell(0, 25, '', ln=True, align='C')
 
-    pdf.set_font('helvetica', '', size=12)
-    pdf.cell(0, 5, 'Thank you !!!', ln=True, align='C')
-    if (transactionType == 'Transfer'):
-        pdf.output("Transfer_Invoice.pdf")
-    else:
-        pdf.output("Supplier_Payment_Invoice.pdf")
+#     pdf.set_font('helvetica', '', size=12)
+#     pdf.cell(0, 5, 'Thank you !!!', ln=True, align='C')
+#     if (transactionType == 'Transfer'):
+#         pdf.output("Transfer_Invoice.pdf")
+#     else:
+#         pdf.output("Supplier_Payment_Invoice.pdf")
 
 
 def SendSMS(content, customerPhone):
@@ -115,38 +115,38 @@ def SendSMS(content, customerPhone):
     print(r)
 
 
-def SendEmail(emailReceiver, transactionType):
-    # how to send emails using gmail stmp service
-    email_sender = 'nuelklus@gmail.com'
-    email_password = 'vuugipsunycollrs'
-    email_receiver = emailReceiver
+# def SendEmail(emailReceiver, transactionType):
+#     # how to send emails using gmail stmp service
+#     email_sender = 'nuelklus@gmail.com'
+#     email_password = 'vuugipsunycollrs'
+#     email_receiver = emailReceiver
 
-    msg = EmailMessage()
-    msg['Subject'] = 'Transaction receipt from Rockman Logistics'
-    msg['From'] = 'rockman@gmail.com'
-    msg['To'] = email_receiver
-    msg.set_content('Tranfer receipt from Rockman')
+#     msg = EmailMessage()
+#     msg['Subject'] = 'Transaction receipt from Rockman Logistics'
+#     msg['From'] = 'rockman@gmail.com'
+#     msg['To'] = email_receiver
+#     msg.set_content('Tranfer receipt from Rockman')
 
-    # Create a secure SSL context
-    # context = ssl.create_default_context()
-    if(transactionType == 'Transfer'):
-        with open('Transfer_Invoice.pdf', 'rb') as f:
-            file_data = f.read()
-            file_name = f.name
-    else:
-        with open('Supplier_Payment_Invoice.pdf', 'rb') as f:
-            file_data = f.read()
-            file_name = f.name
-    msg.add_attachment(file_data, maintype='application',
-                       subtype='octet-stream', filename=file_name)
+#     # Create a secure SSL context
+#     # context = ssl.create_default_context()
+#     if(transactionType == 'Transfer'):
+#         with open('Transfer_Invoice.pdf', 'rb') as f:
+#             file_data = f.read()
+#             file_name = f.name
+#     else:
+#         with open('Supplier_Payment_Invoice.pdf', 'rb') as f:
+#             file_data = f.read()
+#             file_name = f.name
+#     msg.add_attachment(file_data, maintype='application',
+#                        subtype='octet-stream', filename=file_name)
 
-    with smtplib.SMTP('smtp.gmail.com', 587) as smtp:
-        smtp.ehlo()
-        smtp.starttls()
-        smtp.ehlo()
+#     with smtplib.SMTP('smtp.gmail.com', 587) as smtp:
+#         smtp.ehlo()
+#         smtp.starttls()
+#         smtp.ehlo()
 
-        smtp.login(email_sender, email_password)
-        smtp.send_message(msg)
+#         smtp.login(email_sender, email_password)
+#         smtp.send_message(msg)
 
 
 class CustomUserListView(APIView):
@@ -338,11 +338,11 @@ class CustomerTranferView(APIView):
             d = dict()
 
             # generate customer pdf file, Example : Tranfer_Invoice.pdf
-            Invoice(str(paymentInDollars), customerName,
-                    PaymentMode, str(PaymentDate),  tranferDetails, 'supplier', 'Transfer')
+            # Invoice(str(paymentInDollars), customerName,
+            #         PaymentMode, str(PaymentDate),  tranferDetails, 'supplier', 'Transfer')
 
             # send Email to customer
-            SendEmail(customerEmail, 'Transfer')
+            # SendEmail(customerEmail, 'Transfer')
             serializer = TransferSerializers(new_transfer)
             d['data'] = serializer.data
             return Response(d)
@@ -535,10 +535,10 @@ class SupplierPaymentView(APIView):
 
                 transactionType = 'Supplier Payment'
                 # generate customer pdf file, Example : Tranfer_Invoice.pdf
-                Invoice(str(paymentInDollars), customerName,
-                        PaymentMode, str(PaymentDate), 'Transfer details', supplierCompany, transactionType)
+                # Invoice(str(paymentInDollars), customerName,
+                #         PaymentMode, str(PaymentDate), 'Transfer details', supplierCompany, transactionType)
                 # send Email to customer
-                SendEmail(customerEmail, 'Supplier Payment')
+                # SendEmail(customerEmail, 'Supplier Payment')
                 serializer = SupplierPaymentSerializers(new_supplierpayments)
                 d['data'] = serializer.data
                 return Response(d)
